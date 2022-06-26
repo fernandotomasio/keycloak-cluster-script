@@ -3,26 +3,21 @@
 
   handlers:
     - name: restart postgres
-      service:
-        name: postgresql
-        state: restarted
+      shell: "/etc/init.d/postgresql restart"
       become: yes
 
   tasks:
 
     - name: "Instalando postgresql server"
       apt: 
-        name: "{{ item }}"
+        name: ['postgresql', 'python-psycopg2']
         state: latest
       become: yes
-      with_items: 
-        - postgresql
-        - python-psycopg2
 
     - name: "Configurando postgresql server"
       copy: 
         src: "{{ item }}"
-        dest: "/etc/postgresql/10/main"
+        dest: "/etc/postgresql/9.3/main"
       become: yes
       with_items:
         - "files/database/postgresql.conf"
@@ -44,6 +39,16 @@
       become: yes
       become_user: postgres
       
-- hosts: all
+- hosts: keycloak-servers
   tasks:
-    - shell: "echo OK"
+    - name: Adiciona repositorio para instalação do OpenJDK 11
+      ansible.builtin.apt_repository:
+        repo: ppa:openjdk-r/ppa
+      become: yes
+
+    - name: "Instalando postgresql server"
+      apt: 
+        name: ['openjdk-11-jdk']
+        state: latest
+        update_cache: yes
+      become: yes
