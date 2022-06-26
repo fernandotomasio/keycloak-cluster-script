@@ -1,0 +1,1 @@
+# keycloak-cluster-script
