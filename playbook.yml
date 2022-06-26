@@ -14,6 +14,7 @@
       become: yes
       with_items: 
         - postgresql
+        - python-psycopg2
     - name: "Configurando postgresql server"
       copy: 
         src: "{{ item }}"
@@ -23,6 +24,11 @@
         - "files/database/postgresql.conf"
         - "files/database/pg_hba.conf"
       notify: restart postgres
+    - name: "Criando database keycloak"
+      community.postgresql.postgresql_db:
+        name: keycloak
+      become: yes
+      become_user: postgres
 - hosts: all
   tasks:
     - shell: "echo OK"
