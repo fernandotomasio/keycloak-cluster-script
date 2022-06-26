@@ -1,12 +1,15 @@
 ---
 - hosts: database
+
   handlers:
     - name: restart postgres
       service:
         name: postgresql
         state: restarted
       become: yes
+
   tasks:
+
     - name: "Instalando postgresql server"
       apt: 
         name: "{{ item }}"
@@ -15,6 +18,7 @@
       with_items: 
         - postgresql
         - python-psycopg2
+
     - name: "Configurando postgresql server"
       copy: 
         src: "{{ item }}"
@@ -24,11 +28,22 @@
         - "files/database/postgresql.conf"
         - "files/database/pg_hba.conf"
       notify: restart postgres
+
     - name: "Criando database keycloak"
       community.postgresql.postgresql_db:
         name: keycloak
       become: yes
       become_user: postgres
+
+    - name: Connect to acme database, create django user, and grant access to database and products table
+      community.postgresql.postgresql_user:
+        db: keycloak
+        name: keycloak
+        password: keycloak
+        priv: ALL
+      become: yes
+      become_user: postgres
+      
 - hosts: all
   tasks:
     - shell: "echo OK"
