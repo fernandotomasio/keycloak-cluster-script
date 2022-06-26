@@ -1,4 +1,28 @@
 ---
+- hosts: database
+  handlers:
+    - name: restart postgres
+      service:
+        name: postgresql
+        state: restarted
+      become: yes
+  tasks:
+    - name: "Instalando postgresql server"
+      apt: 
+        name: "{{ item }}"
+        state: latest
+      become: yes
+      with_items: 
+        - postgresql
+    - name: "Configurando postgresql server"
+      copy: 
+        src: "{{ item }}"
+        dest: "/etc/postgresql/10/main"
+      become: yes
+      with_items:
+        - "files/database/postgresql.conf"
+        - "files/database/pg_hba.conf"
+      notify: restart postgres
 - hosts: all
   tasks:
     - shell: "echo OK"
