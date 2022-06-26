@@ -14,6 +14,27 @@ Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "hashicorp/bionic64"
 
+
+  config.vm.define "postgresql" do |m|
+    m.vm.network "private_network", ip: "192.168.56.10"  
+  end
+
+  config.vm.define "nginx-reverse-proxy" do |m|
+    m.vm.network "private_network", ip: "192.168.56.11"  
+  end
+
+  config.vm.define "keycloak-server1" do |m|
+    m.vm.network "private_network", ip: "192.168.56.12"  
+  end
+
+  config.vm.define "keycloak-server2" do |m|
+    m.vm.network "private_network", ip: "192.168.56.13"  
+  end
+
+  config.vm.define "keycloak-server3" do |m|
+    m.vm.network "private_network", ip: "192.168.56.14"  
+  end
+
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
