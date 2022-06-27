@@ -3,34 +3,36 @@
 
   handlers:
     - name: restart postgres
-      shell: "/etc/init.d/postgresql restart"
+      service:
+        name: postgresql
+        state: restarted
       become: yes
 
   tasks:
 
-    - name: "Instalando postgresql server"
+    - name: Instalando postgresql server
       apt: 
-        name: ['postgresql', 'python-psycopg2']
+        name: ['postgresql', 'python3-psycopg2']
         state: latest
       become: yes
 
-    - name: "Configurando postgresql server"
+    - name: Configurando postgresql server
       copy: 
         src: "{{ item }}"
-        dest: "/etc/postgresql/9.3/main"
+        dest: "/etc/postgresql/10/main"
       become: yes
       with_items:
         - "files/database/postgresql.conf"
         - "files/database/pg_hba.conf"
       notify: restart postgres
 
-    - name: "Criando database keycloak"
+    - name: Criando database keycloak
       community.postgresql.postgresql_db:
         name: keycloak
       become: yes
       become_user: postgres
 
-    - name: Connect to acme database, create django user, and grant access to database and products table
+    - name: Criando usuario keycloak
       community.postgresql.postgresql_user:
         db: keycloak
         name: keycloak
@@ -40,15 +42,49 @@
       become_user: postgres
       
 - hosts: keycloak-servers
-  tasks:
-    - name: Adiciona repositorio para instalação do OpenJDK 11
-      ansible.builtin.apt_repository:
-        repo: ppa:openjdk-r/ppa
-      become: yes
 
-    - name: "Instalando postgresql server"
+  tasks:
+
+    - name: Instalando OpenJDK 11
       apt: 
         name: ['openjdk-11-jdk']
         state: latest
         update_cache: yes
       become: yes
+
+    - name: Instalando dependências
+      apt: 
+        name: ['unzip']
+        state: latest
+        update_cache: yes
+      become: yes
+
+    - name: Realizando o download do Keycloak
+      ansible.builtin.get_url:
+        url: https://github.com/keycloak/keycloak/releases/download/18.0.2/keycloak-18.0.2.zip
+        dest: /tmp/keycloak-18.0.2.zip
+        force: no
+    
+    - name: Descompactando Keycloak
+      ansible.builtin.unarchive:
+        src: /tmp/keycloak-18.0.2.zip
+        dest: /opt
+        remote_src: yes
+      become: yes
+
+    - name: Configurando Keycloak database vendor
+      shell: "/opt/keycloak-18.0.2/bin/kc.sh build --db postgres"
+      become: yes
+
+    - name: Copiando certificados
+      copy: 
+        src: "{{ item }}"
+        dest: "/certificates/"
+      become: yes
+      with_items:
+        - "files/keycloak/certificates/cert.pem"
+        - "files/keycloak/certificates/key.pem"
+
+    # - name: Iniciando Keycloak
+    #   shell: "/opt/keycloak-18.0.2/bin/kc.sh start --https-certificate-file=/certificates/cert.pem --https-certificate-key-file=/certificates/key.pem --hostname=keycloak-server --db-url-host 192.168.56.10 --db-schema public --db-username keycloak --db-password keycloak"
+    #   become: yes

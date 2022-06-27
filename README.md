@@ -12,7 +12,6 @@ install ansible
 
 install ansible collection -> ansible-galaxy collection install community.postgresql
 
-
 vagrant up
 
 ansible-playbook playbook.yml  -i hosts
