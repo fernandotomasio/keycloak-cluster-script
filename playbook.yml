@@ -59,18 +59,18 @@
         update_cache: yes
       become: yes
 
-    - name: Realizando o download do Keycloak
-      ansible.builtin.get_url:
-        url: https://github.com/keycloak/keycloak/releases/download/18.0.2/keycloak-18.0.2.zip
-        dest: /tmp/keycloak-18.0.2.zip
-        force: no
+    # - name: Realizando o download do Keycloak
+    #   ansible.builtin.get_url:
+    #     url: https://github.com/keycloak/keycloak/releases/download/18.0.2/keycloak-18.0.2.zip
+    #     dest: /tmp/keycloak-18.0.2.zip
+    #     force: no
     
-    - name: Descompactando Keycloak
-      ansible.builtin.unarchive:
-        src: /tmp/keycloak-18.0.2.zip
-        dest: /opt
-        remote_src: yes
-      become: yes
+    # - name: Descompactando Keycloak
+    #   ansible.builtin.unarchive:
+    #     src: /tmp/keycloak-18.0.2.zip
+    #     dest: /opt
+    #     remote_src: yes
+    #   become: yes
 
     - name: Configurando Keycloak database vendor
       shell: "/opt/keycloak-18.0.2/bin/kc.sh build --db postgres"
@@ -84,8 +84,16 @@
       with_items:
         - "files/keycloak/certificates/keycloak_ccarj_key.keystore"
 
+    - name: Copiando configurações do keycloak
+      copy: 
+        src: "{{ item }}"
+        dest: "/opt/keycloak-18.0.2/conf"
+      become: yes
+      with_items:
+        - "files/keycloak/keycloak.conf"
+
     - name: Iniciando Keycloak
-      shell: "/opt/keycloak-18.0.2/bin/kc.sh start --https-port=443 --https-key-store-file=/certificates/keycloak_ccarj_key.keystore --https-key-store-password=#ccarj# --hostname=auth.ccarj.intraer --db-url-host 192.168.56.10 --db-schema public --db-username keycloak --db-password keycloak"
+      shell: "/opt/keycloak-18.0.2/bin/kc.sh start"
       environment:
         KEYCLOAK_ADMIN: admin
         KEYCLOAK_ADMIN_PASSWORD: admin
