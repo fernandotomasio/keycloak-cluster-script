@@ -82,9 +82,11 @@
         dest: "/certificates/"
       become: yes
       with_items:
-        - "files/keycloak/certificates/cert.pem"
-        - "files/keycloak/certificates/key.pem"
+        - "files/keycloak/certificates/keycloak_ccarj_key.keystore"
 
-    # - name: Iniciando Keycloak
-    #   shell: "/opt/keycloak-18.0.2/bin/kc.sh start --https-certificate-file=/certificates/cert.pem --https-certificate-key-file=/certificates/key.pem --hostname=keycloak-server --db-url-host 192.168.56.10 --db-schema public --db-username keycloak --db-password keycloak"
-    #   become: yes
+    - name: Iniciando Keycloak
+      shell: "/opt/keycloak-18.0.2/bin/kc.sh start --https-port=443 --https-key-store-file=/certificates/keycloak_ccarj_key.keystore --https-key-store-password=#ccarj# --hostname=auth.ccarj.intraer --db-url-host 192.168.56.10 --db-schema public --db-username keycloak --db-password keycloak"
+      environment:
+        KEYCLOAK_ADMIN: admin
+        KEYCLOAK_ADMIN_PASSWORD: admin
+      become: yes
