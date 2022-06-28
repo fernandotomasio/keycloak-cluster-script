@@ -43,6 +43,11 @@
       
 - hosts: keycloak-servers
 
+  handlers:
+    - name: reload nginx
+      shell: nginx -s reload
+      become: yes
+
   tasks:
 
     - name: Instalando OpenJDK 11
@@ -93,8 +98,36 @@
         - "files/keycloak/keycloak.conf"
 
     - name: Iniciando Keycloak
-      shell: "/opt/keycloak-18.0.2/bin/kc.sh start"
+      shell: "nohup /opt/keycloak-18.0.2/bin/kc.sh start 2>&1 &"
       environment:
         KEYCLOAK_ADMIN: admin
         KEYCLOAK_ADMIN_PASSWORD: admin
       become: yes
+
+- hosts: reverse-proxy
+
+  tasks:
+
+    - name: Instalando NGINX
+      apt: 
+        name: ['nginx']
+        state: latest
+      become: yes
+
+    - name: Copiando certificados
+      copy: 
+        src: "{{ item }}"
+        dest: "/certificates/"
+      become: yes
+      with_items:
+        - "files/nginx/certificates/keycloak_ccarj_key.crt"
+        - "files/nginx/certificates/keycloak_ccarj_key.key"
+
+    - name: Configurando NGINX
+      copy: 
+        src: "{{ item }}"
+        dest: "/etc/nginx/conf.d/"
+      become: yes
+      with_items:
+        - "files/nginx/lb.conf"
+      notify: reload nginx

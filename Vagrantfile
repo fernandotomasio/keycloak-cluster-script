@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "nginx-reverse-proxy" do |m|
+    m.vm.hostname = "auth.ccarj.intraer"
     m.vm.network "private_network", ip: "192.168.56.11"  
   end
 
