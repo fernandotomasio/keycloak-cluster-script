@@ -1,0 +1,53 @@
+---
+
+- name: Instalando OpenJDK 11
+  apt: 
+    name: ['openjdk-11-jdk']
+    state: latest
+    update_cache: yes
+  become: yes
+
+- name: Instalando dependências
+  apt: 
+    name: ['unzip']
+    state: latest
+    update_cache: yes
+  become: yes
+
+- name: Realizando o download do Keycloak
+  ansible.builtin.get_url:
+    url: https://github.com/keycloak/keycloak/releases/download/18.0.2/keycloak-18.0.2.zip
+    dest: /tmp/keycloak-18.0.2.zip
+    force: no
+
+- name: Descompactando Keycloak
+  ansible.builtin.unarchive:
+    src: /tmp/keycloak-18.0.2.zip
+    dest: /opt
+    remote_src: yes
+  become: yes
+
+- name: Configurando Keycloak database vendor
+  shell: "/opt/keycloak-18.0.2/bin/kc.sh build --db postgres"
+  become: yes
+
+- name: Copiando certificados
+  copy: 
+    src: "{{ item }}"
+    dest: "/certificates/"
+  become: yes
+  with_items:
+    - "files/keycloak/certificates/keycloak_ccarj_key.keystore"
+
+- name: Copiando configurações do keycloak
+  template: 
+    src: "templates/keycloak.conf.j2"
+    dest: "/opt/keycloak-18.0.2/conf/keycloak.conf"
+  become: yes
+
+- name: Iniciando Keycloak
+  shell: "nohup /opt/keycloak-18.0.2/bin/kc.sh start 2>&1 &"
+  environment:
+    KEYCLOAK_ADMIN: admin
+    KEYCLOAK_ADMIN_PASSWORD: admin
+  become: yes

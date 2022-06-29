@@ -9,9 +9,9 @@ metrics-enabled=true
 db=postgres
 
 db=postgres
-db-username=keycloak
-db-password=keycloak
-db-url-host=192.168.56.10
+db-username={{ dbuser }}
+db-password={{ dbpassword }}
+db-url-host={{ dbhost }}
 db-schema=public
 
 # Observability
@@ -26,4 +26,8 @@ https-key-store-file=/certificates/keycloak_ccarj_key.keystore
 https-key-store-password=#ccarj#
 
 # Hostname for the Keycloak server.
-hostname=auth.ccarj.intraer
+hostname={{ hostname }}
+
+# Proxy mode
+
+proxy=edge

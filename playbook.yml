@@ -1,110 +1,64 @@
 ---
-- hosts: database
+# - hosts: database
 
-  handlers:
-    - name: restart postgres
-      service:
-        name: postgresql
-        state: restarted
-      become: yes
+#   handlers:
+#     - name: restart postgres
+#       service:
+#         name: postgresql
+#         state: restarted
+#       become: yes
 
-  tasks:
+#   tasks:
 
-    - name: Instalando postgresql server
-      apt: 
-        name: ['postgresql', 'python3-psycopg2']
-        state: latest
-      become: yes
+#     - name: Instalando postgresql server
+#       apt: 
+#         name: ['postgresql', 'python3-psycopg2']
+#         state: latest
+#       become: yes
 
-    - name: Configurando postgresql server
-      copy: 
-        src: "{{ item }}"
-        dest: "/etc/postgresql/10/main"
-      become: yes
-      with_items:
-        - "files/database/postgresql.conf"
-        - "files/database/pg_hba.conf"
-      notify: restart postgres
+#     - name: Configurando postgresql server
+#       copy: 
+#         src: "{{ item }}"
+#         dest: "/etc/postgresql/10/main"
+#       become: yes
+#       with_items:
+#         - "files/database/postgresql.conf"
+#         - "files/database/pg_hba.conf"
+#       notify: restart postgres
 
-    - name: Criando database keycloak
-      community.postgresql.postgresql_db:
-        name: keycloak
-      become: yes
-      become_user: postgres
+#     - name: Criando database keycloak
+#       community.postgresql.postgresql_db:
+#         name: "{{ dbname }}"
+#       become: yes
+#       become_user: postgres
 
-    - name: Criando usuario keycloak
-      community.postgresql.postgresql_user:
-        db: keycloak
-        name: keycloak
-        password: keycloak
-        priv: ALL
-      become: yes
-      become_user: postgres
+#     - name: Criando usuario keycloak
+#       community.postgresql.postgresql_user:
+#         db: "{{ dbname }}"
+#         name: "{{ dbuser }}"
+#         password: "{{ dbpassword }}"
+#         priv: ALL
+#       become: yes
+#       become_user: postgres
       
-- hosts: keycloak-servers
+# - hosts: keycloak-server1
+#   roles:
+#     - keycloak
+
+# - hosts: keycloak-server2
+#   roles:
+#     - keycloak
+
+# - hosts: keycloak-server3
+#   roles:
+#     - keycloak
+
+- hosts: reverse-proxy
 
   handlers:
     - name: reload nginx
       shell: nginx -s reload
       become: yes
-
-  tasks:
-
-    - name: Instalando OpenJDK 11
-      apt: 
-        name: ['openjdk-11-jdk']
-        state: latest
-        update_cache: yes
-      become: yes
-
-    - name: Instalando dependências
-      apt: 
-        name: ['unzip']
-        state: latest
-        update_cache: yes
-      become: yes
-
-    # - name: Realizando o download do Keycloak
-    #   ansible.builtin.get_url:
-    #     url: https://github.com/keycloak/keycloak/releases/download/18.0.2/keycloak-18.0.2.zip
-    #     dest: /tmp/keycloak-18.0.2.zip
-    #     force: no
-    
-    # - name: Descompactando Keycloak
-    #   ansible.builtin.unarchive:
-    #     src: /tmp/keycloak-18.0.2.zip
-    #     dest: /opt
-    #     remote_src: yes
-    #   become: yes
-
-    - name: Configurando Keycloak database vendor
-      shell: "/opt/keycloak-18.0.2/bin/kc.sh build --db postgres"
-      become: yes
-
-    - name: Copiando certificados
-      copy: 
-        src: "{{ item }}"
-        dest: "/certificates/"
-      become: yes
-      with_items:
-        - "files/keycloak/certificates/keycloak_ccarj_key.keystore"
-
-    - name: Copiando configurações do keycloak
-      copy: 
-        src: "{{ item }}"
-        dest: "/opt/keycloak-18.0.2/conf"
-      become: yes
-      with_items:
-        - "files/keycloak/keycloak.conf"
-
-    - name: Iniciando Keycloak
-      shell: "nohup /opt/keycloak-18.0.2/bin/kc.sh start 2>&1 &"
-      environment:
-        KEYCLOAK_ADMIN: admin
-        KEYCLOAK_ADMIN_PASSWORD: admin
-      become: yes
-
-- hosts: reverse-proxy
 
   tasks:
 

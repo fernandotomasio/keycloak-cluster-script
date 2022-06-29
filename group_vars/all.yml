@@ -1,0 +1,5 @@
+dbhost: 192.168.56.10
+dbname: keycloak
+dbuser: keycloak
+dbpassword: keycloak
+dbschema: public
